@@ -1,0 +1,6 @@
+.env
+.mint-state.json
+.mint-state.json.tmp
+dist/
+node_modules/
+.agents/
