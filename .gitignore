@@ -3,4 +3,5 @@
 .mint-state.json.tmp
 dist/
 node_modules/
+.idea/
 .agents/
