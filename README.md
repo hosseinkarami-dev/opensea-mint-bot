@@ -166,7 +166,110 @@ The transaction target, calldata, and value are taken from OpenSea's mint respon
 
 The bot treats common OpenSea responses differently:
 
-| Status | Meaning                    | Bot behavior       |
-| ------ | -------------------------- | ------------------ |
-| `200`  | Mint transaction available | Sign and broadcast |
-| `      |                            |                    |
+| Status        | Meaning                                   | Bot behavior                    |
+| ------------- | ----------------------------------------- | ------------------------------- |
+| `200`         | Mint transaction available                | Sign and broadcast              |
+| `400`         | Invalid request                           | Stop                            |
+| `401` / `403` | Authentication/authorization failure      | Stop                            |
+| `404`         | Drop not found                            | Stop                            |
+| `409`         | Drop currently inactive                   | Retry                           |
+| `422`         | Mint precondition not currently satisfied | Retry                           |
+| `429`         | Rate limited                              | Respect `Retry-After` and retry |
+
+A `422` response does not necessarily mean that the wallet is permanently ineligible. Depending on the drop, it can represent different mint preconditions.
+
+## Gas Configuration
+
+Gas can be configured automatically or manually.
+
+### Automatic mode
+
+```env
+GAS_MODE=auto
+GAS_PRICE_MULTIPLIER=1.2
+GAS_LIMIT_MULTIPLIER=1.10
+```
+
+### Manual gas price
+
+```env
+GAS_MODE=manual
+GAS_PRICE_GWEI=1
+```
+
+Gas configuration does not modify the mint price returned by OpenSea.
+
+## Security
+
+**Never commit private keys or API keys to Git.**
+
+Use environment variables:
+
+```env
+PRIVATE_KEY=...
+OPENSEA_API_KEY=...
+```
+
+Make sure `.env` is included in `.gitignore`:
+
+```gitignore
+.env
+.env.*
+!.env.example
+
+.mint-state.json
+node_modules/
+dist/
+```
+
+For production use, use a dedicated wallet with only the funds required for the intended mint and transaction fees.
+
+If a private key or API key is accidentally exposed, rotate/revoke it immediately.
+
+## State Management
+
+The bot can persist successful mint information locally.
+
+Example:
+
+```text
+.mint-state.json
+```
+
+This state is intended to help prevent accidentally submitting the same mint multiple times.
+
+The state file should not be committed to the repository.
+
+## Project Structure
+
+```text
+opensea-mint-bot/
+├── src/
+│   ├── config.ts
+│   ├── index.ts
+│   ├── opensea.ts
+│   └── ...
+├── .env
+├── .gitignore
+├── package.json
+├── package-lock.json
+├── tsconfig.json
+└── README.md
+```
+
+## Technology Stack
+
+* TypeScript
+* Node.js
+* viem
+* OpenSea API
+* dotenv
+* EVM-compatible networks
+
+## Disclaimer
+
+This project interacts with blockchain networks and can submit real transactions that spend cryptocurrency.
+
+Use it at your own risk. Always test with a dry run or API probe before using a funded wallet.
+
+The project is not affiliated with or endorsed by OpenSea.
